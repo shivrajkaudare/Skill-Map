@@ -1,25 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
-import {
-    ReactFlow,
-    Background, Controls, MiniMap,
-    NodeChange, EdgeChange,
-    applyNodeChanges, applyEdgeChanges,
-    useNodesState, useEdgesState,
-    Node, Edge,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import { useEffect, useMemo, useRef } from 'react';
+import cytoscape, { Core } from 'cytoscape';
 
-import PersonNodeComp from './PersonNode';
-import SkillNodeComp from './SkillNode';
+import CytoscapeControls from './CytoscapeControls';
+import CytoscapeNavigator from './CytoscapeNavigator';
 import { GraphState, SelectedNode } from '@/lib/types';
-import { buildReactFlowElements } from '@/lib/graphHelpers';
-
-const NODE_TYPES = {
-    person: PersonNodeComp,
-    skill: SkillNodeComp,
-};
+import {
+    buildCytoscapeElements,
+    cytoscapeStylesheet,
+    getHighlightedElements,
+} from '@/lib/cytoscapeHelpers';
 
 interface Props {
     state: GraphState;
@@ -29,110 +20,124 @@ interface Props {
 }
 
 export default function SkillGraph({
-    state, selectedNode, onSelectNode, onUpdateNodePosition,
+    state,
+    selectedNode,
+    onSelectNode,
+    onUpdateNodePosition,
 }: Props) {
-    const { nodes: initNodes, edges: initEdges } = useMemo(
-        () => buildReactFlowElements(state),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [],
-    );
+    const containerRef = useRef<HTMLDivElement>(null);
+    const cyRef = useRef<Core | null>(null);
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initEdges);
+    // Memoize stylesheet for performance
+    const stylesheet = useMemo(() => cytoscapeStylesheet, []);
 
-    // Sync nodes/edges whenever state changes
+    // Initialize Cytoscape instance
     useEffect(() => {
-        const { nodes: nextNodes, edges: nextEdges } = buildReactFlowElements(state);
+        if (!containerRef.current || cyRef.current) return;
 
-        // Apply highlight/dim for selected node
-        const highlightedIds = new Set<string>();
-        if (selectedNode) {
-            highlightedIds.add(selectedNode.id);
-            state.connections.forEach((c) => {
-                if (selectedNode.type === 'person' && c.personId === selectedNode.id)
-                    highlightedIds.add(c.skillId);
-                if (selectedNode.type === 'skill' && c.skillId === selectedNode.id)
-                    highlightedIds.add(c.personId);
-            });
-        }
+        const cy = cytoscape({
+            container: containerRef.current,
+            elements: [],
+            style: stylesheet,
+            layout: { name: 'preset' },
+            minZoom: 0.3,
+            maxZoom: 2,
+            wheelSensitivity: 0.2,
+        });
 
-        const finalNodes = nextNodes.map((n) => ({
-            ...n,
-            data: {
-                ...n.data,
-                dimmed: selectedNode ? !highlightedIds.has(n.id) : false,
-            },
-            className: selectedNode
-                ? highlightedIds.has(n.id) ? 'node-highlighted' : 'node-dimmed'
-                : '',
-        }));
+        cyRef.current = cy;
 
-        setNodes(finalNodes);
-        setEdges(nextEdges);
-    }, [state, selectedNode, setNodes, setEdges]);
+        // Node click → toggle selection
+        cy.on('tap', 'node', (evt) => {
+            const node = evt.target;
+            const type = node.data('type') as 'person' | 'skill';
+            const id = node.data('id') as string;
 
-    // Persist drag positions
-    const handleNodesChange = useCallback(
-        (changes: NodeChange[]) => {
-            changes.forEach((change) => {
-                if (change.type === 'position' && change.dragging === false && change.position) {
-                    onUpdateNodePosition(change.id, change.position.x, change.position.y);
+            if (selectedNode?.id === id) {
+                onSelectNode(null); // Deselect
+            } else {
+                onSelectNode({ type, id });
+            }
+        });
+
+        // Canvas click → deselect
+        cy.on('tap', (evt) => {
+            if (evt.target === cy) {
+                onSelectNode(null);
+            }
+        });
+
+        // Drag end → save position
+        cy.on('free', 'node', (evt) => {
+            const node = evt.target;
+            const pos = node.position();
+            const id = node.data('id') as string;
+            onUpdateNodePosition(id, pos.x, pos.y);
+        });
+
+        // Initial fit view with padding
+        const fitTimeout = setTimeout(() => {
+            if (cyRef.current) {
+                cyRef.current.fit(undefined, 100);
+            }
+        }, 100);
+
+        // Cleanup
+        return () => {
+            clearTimeout(fitTimeout);
+            cy.destroy();
+            cyRef.current = null;
+        };
+    }, []);
+
+    // Update elements when state or selection changes
+    useEffect(() => {
+        const cy = cyRef.current;
+        if (!cy) return;
+
+        const cyElements = buildCytoscapeElements(state);
+        const { nodeIds, edgeIds } = getHighlightedElements(state, selectedNode);
+
+        cy.batch(() => {
+            // Remove all elements
+            cy.elements().remove();
+
+            // Add new elements
+            cy.add(cyElements);
+
+            // Apply classes based on selection
+            cy.elements().forEach((ele) => {
+                const id = ele.id();
+                const isHighlighted = selectedNode && (nodeIds.has(id) || edgeIds.has(id));
+                const isDimmed = selectedNode && !isHighlighted;
+
+                ele.removeClass('highlighted dimmed');
+                if (isHighlighted) {
+                    ele.addClass('highlighted');
+                } else if (isDimmed) {
+                    ele.addClass('dimmed');
                 }
             });
-            setNodes((nds) => applyNodeChanges(changes, nds) as Node[]);
-        },
-        [setNodes, onUpdateNodePosition],
-    );
-
-    const handleEdgesChange = useCallback(
-        (changes: EdgeChange[]) => {
-            setEdges((eds) => applyEdgeChanges(changes, eds) as Edge[]);
-        },
-        [setEdges],
-    );
-
-    // Node click → open detail panel
-    const handleNodeClick = useCallback(
-        (_: React.MouseEvent, node: Node) => {
-            const type = node.type === 'person' ? 'person' : 'skill';
-            if (selectedNode?.id === node.id) {
-                onSelectNode(null); // toggle off
-            } else {
-                onSelectNode({ type, id: node.id });
-            }
-        },
-        [selectedNode, onSelectNode],
-    );
-
-    // Click on blank canvas → deselect
-    const handlePaneClick = useCallback(() => {
-        onSelectNode(null);
-    }, [onSelectNode]);
+        });
+    }, [state, selectedNode]);
 
     return (
-        <div className="graph-wrapper w-full h-full">
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={NODE_TYPES}
-                onNodesChange={handleNodesChange}
-                onEdgesChange={handleEdgesChange}
-                onNodeClick={handleNodeClick}
-                onPaneClick={handlePaneClick}
-                fitView
-                fitViewOptions={{ padding: 0.15 }}
-                minZoom={0.3}
-                maxZoom={2}
-                proOptions={{ hideAttribution: true }}
-            >
-                <Background color="#334155" gap={24} size={1} />
-                <Controls className="rf-controls" />
-                <MiniMap
-                    nodeColor={(n) => (n.type === 'person' ? '#6366f1' : '#a855f7')}
-                    maskColor="rgba(15, 23, 42, 0.6)"
-                    className="rf-minimap"
-                />
-            </ReactFlow>
+        <div className="graph-wrapper w-full h-full relative">
+            {/* Background grid */}
+            <div className="cytoscape-background-grid" />
+
+            {/* Cytoscape canvas */}
+            <div
+                ref={containerRef}
+                className="cytoscape-container"
+                style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }}
+            />
+
+            {/* Controls */}
+            <CytoscapeControls cy={cyRef.current} />
+
+            {/* Navigator/Minimap */}
+            <CytoscapeNavigator cy={cyRef.current} />
         </div>
     );
 }

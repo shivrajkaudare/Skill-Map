@@ -20,7 +20,52 @@ export function useGraphState() {
     // Load from localStorage only on client after hydration
     useEffect(() => {
         const loadedState = loadGraphState();
-        setState(loadedState);
+
+        // Ensure all nodes have positions assigned
+        const PADDING = 100;
+        const SPACING = 120;
+        const canvasWidth = 1200;
+        const leftX = PADDING;
+        const rightX = canvasWidth - PADDING;
+
+        // Assign positions to people who don't have them
+        let currentPersonY = PADDING;
+        const peopleWithPositions = loadedState.people.map(person => {
+            if (person.x !== undefined && person.y !== undefined) {
+                // Keep track of max Y for positioned nodes
+                if (person.y > currentPersonY - SPACING) {
+                    currentPersonY = person.y + SPACING;
+                }
+                return person;
+            }
+            const positioned = { ...person, x: leftX, y: currentPersonY };
+            currentPersonY += SPACING;
+            return positioned;
+        });
+
+        // Assign positions to skills who don't have them
+        let currentSkillY = PADDING;
+        const skillsWithPositions = loadedState.skills.map(skill => {
+            if (skill.x !== undefined && skill.y !== undefined) {
+                // Keep track of max Y for positioned nodes
+                if (skill.y > currentSkillY - SPACING) {
+                    currentSkillY = skill.y + SPACING;
+                }
+                return skill;
+            }
+            const positioned = { ...skill, x: rightX, y: currentSkillY };
+            currentSkillY += SPACING;
+            return positioned;
+        });
+
+        const stateWithPositions = {
+            ...loadedState,
+            people: peopleWithPositions,
+            skills: skillsWithPositions,
+        };
+
+        setState(stateWithPositions);
+        saveGraphState(stateWithPositions);
         setIsHydrated(true);
     }, []);
 
@@ -32,9 +77,23 @@ export function useGraphState() {
     // ── People ─────────────────────────────────────────────────────────────────
     const addPerson = useCallback((name: string, role?: string) => {
         const id = generateId('p', state.people.map((p) => p.id));
+
+        // Calculate initial position for new person (left column)
+        const PADDING = 100;
+        const SPACING = 120;
+        const leftX = PADDING;
+
+        // Find the lowest Y position among existing people, or start at top
+        const existingYPositions = state.people
+            .map(p => p.y)
+            .filter((y): y is number => y !== undefined);
+        const newY = existingYPositions.length > 0
+            ? Math.max(...existingYPositions) + SPACING
+            : PADDING;
+
         const next: GraphState = {
             ...state,
-            people: [...state.people, { id, name, role }],
+            people: [...state.people, { id, name, role, x: leftX, y: newY }],
         };
         update(next);
     }, [state, update]);
@@ -58,9 +117,24 @@ export function useGraphState() {
     // ── Skills ─────────────────────────────────────────────────────────────────
     const addSkill = useCallback((name: string, category?: string) => {
         const id = generateId('s', state.skills.map((s) => s.id));
+
+        // Calculate initial position for new skill (right column)
+        const PADDING = 100;
+        const SPACING = 120;
+        const canvasWidth = 1200;
+        const rightX = canvasWidth - PADDING;
+
+        // Find the lowest Y position among existing skills, or start at top
+        const existingYPositions = state.skills
+            .map(s => s.y)
+            .filter((y): y is number => y !== undefined);
+        const newY = existingYPositions.length > 0
+            ? Math.max(...existingYPositions) + SPACING
+            : PADDING;
+
         update({
             ...state,
-            skills: [...state.skills, { id, name, category }],
+            skills: [...state.skills, { id, name, category, x: rightX, y: newY }],
         });
     }, [state, update]);
 
