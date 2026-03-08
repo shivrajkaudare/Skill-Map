@@ -68,6 +68,7 @@ export function buildCytoscapeElements(state: GraphState): ElementDefinition[] {
 
     // ── Nodes ──────────────────────────────────────────────────────────────────
     people.forEach((p, i) => {
+        const pos = p.x !== undefined ? { x: p.x, y: p.y! } : personPositions[i];
         elements.push({
             group: 'nodes',
             data: {
@@ -75,12 +76,15 @@ export function buildCytoscapeElements(state: GraphState): ElementDefinition[] {
                 type: 'person',
                 label: p.name,
                 person: p,
+                x: pos.x,
+                y: pos.y,
             },
-            position: p.x !== undefined ? { x: p.x, y: p.y! } : personPositions[i],
+            position: pos,
         });
     });
 
     skills.forEach((s, i) => {
+        const pos = s.x !== undefined ? { x: s.x, y: s.y! } : skillPositions[i];
         elements.push({
             group: 'nodes',
             data: {
@@ -89,8 +93,10 @@ export function buildCytoscapeElements(state: GraphState): ElementDefinition[] {
                 label: s.name,
                 skill: s,
                 category: s.category || 'Other',
+                x: pos.x,
+                y: pos.y,
             },
-            position: s.x !== undefined ? { x: s.x, y: s.y! } : skillPositions[i],
+            position: pos,
         });
     });
 
@@ -139,249 +145,279 @@ export function getHighlightedElements(
 
 // ─── Cytoscape Stylesheet ──────────────────────────────────────────────────────
 
-export const cytoscapeStylesheet: any[] = [
-    // Base node styles - Premium card design
-    {
-        selector: 'node',
-        style: {
-            'width': 160,
-            'height': 56,
-            'shape': 'round-rectangle',
-            // Gradient background
-            'background-fill': 'linear-gradient',
-            'background-gradient-direction': 'to-bottom',
-            'background-gradient-stop-colors': '#334155 #1e293b',
-            'background-gradient-stop-positions': '0% 100%',
-            'border-width': 2.5,
-            'border-color': '#475569',
-            'border-style': 'solid',
-            'label': 'data(label)',
-            'font-size': '14px',
-            'font-family': 'system-ui, -apple-system, sans-serif',
-            'font-weight': '700',
-            'color': '#f1f5f9',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'cursor': 'pointer',
-            'text-outline-color': '#0f172a',
-            'text-outline-width': 1,
-            // Smooth transitions
-            'transition-property': 'border-width, border-color, background-color, width, height, shadow-blur',
-            'transition-duration': '0.3s',
-            'transition-timing-function': 'cubic-bezier(0.4, 0, 0.2, 1)',
-            // Premium shadow
-            'shadow-blur': 12,
-            'shadow-color': '#000000',
-            'shadow-opacity': 0.4,
-            'shadow-offset-x': 0,
-            'shadow-offset-y': 3,
-            // Subtle glow
-            'underlay-color': '#475569',
-            'underlay-padding': 5,
-            'underlay-opacity': 0.2,
-            'underlay-shape': 'round-rectangle',
+export const getCytoscapeStylesheet = (theme: 'light' | 'dark'): any[] => {
+    const isDark = theme === 'dark';
+
+    // Theme Variables
+    const bgColor = isDark ? ['#334155', '#1e293b'] : ['#f8fafc', '#ffffff'];
+    const borderColor = isDark ? '#475569' : '#cbd5e1';
+    const textColor = isDark ? '#f1f5f9' : '#1e293b';
+    const textOutline = isDark ? '#0f172a' : '#ffffff';
+    const underlayBase = isDark ? '#475569' : '#94a3b8';
+
+    // Pulse/Glow effects
+    const highlightWidth = isDark ? 4 : 4;
+    const highlightBg = isDark ? '#334155' : '#f1f5f9';
+
+    const personBgDark = ['#818cf8', '#6366f1', '#4f46e5'];
+    const personBgLight = ['#818cf8', '#6366f1', '#4f46e5']; // Kept vibrant 
+    const personBorder = isDark ? '#a5b4fc' : '#818cf8';
+
+    // Skill Category Bases
+    const catColors = {
+        Frontend: isDark ? '#a78bfa' : '#8b5cf6',
+        Backend: isDark ? '#f472b6' : '#ec4899',
+        DevOps: isDark ? '#fb923c' : '#f97316',
+        Design: isDark ? '#2dd4bf' : '#14b8a6',
+        Other: isDark ? '#9ca3af' : '#6b7280',
+    };
+
+    return [
+        // Base node styles - Premium card design
+        {
+            selector: 'node',
+            style: {
+                'width': 160,
+                'height': 56,
+                'shape': 'round-rectangle',
+                // Gradient background
+                'background-fill': 'linear-gradient',
+                'background-gradient-direction': 'to-bottom',
+                'background-gradient-stop-colors': bgColor.join(' '),
+                'background-gradient-stop-positions': '0% 100%',
+                'background-opacity': 0.85,
+                'border-width': 2.5,
+                'border-color': borderColor,
+                'border-style': 'solid',
+                'label': 'data(label)',
+                'font-size': '14px',
+                'font-family': 'system-ui, -apple-system, sans-serif',
+                'font-weight': '700',
+                'color': textColor,
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'cursor': 'pointer',
+                'text-outline-color': textOutline,
+                'text-outline-width': 2, // slightly thicker for contrast
+                // Smooth transitions
+                'transition-property': 'border-width, border-color, background-color, width, height, shadow-blur',
+                'transition-duration': '0.3s',
+                'transition-timing-function': 'cubic-bezier(0.4, 0, 0.2, 1)',
+                // Premium shadow
+                'shadow-blur': 12,
+                'shadow-color': isDark ? '#000000' : '#cbd5e1',
+                'shadow-opacity': isDark ? 0.4 : 0.6,
+                'shadow-offset-x': 0,
+                'shadow-offset-y': 3,
+                // Subtle glow
+                'underlay-color': underlayBase,
+                'underlay-padding': 5,
+                'underlay-opacity': 0.2,
+                'underlay-shape': 'round-rectangle',
+            },
         },
-    },
-    // Person nodes - Premium circular design
-    {
-        selector: 'node[type="person"]',
-        style: {
-            'shape': 'ellipse',
-            'width': 100,
-            'height': 100,
-            // Gradient-like effect using background
-            'background-fill': 'radial-gradient',
-            'background-gradient-stop-colors': '#818cf8 #6366f1 #4f46e5',
-            'background-gradient-stop-positions': '0% 50% 100%',
-            'border-width': 3,
-            'border-color': '#a5b4fc',
-            'border-style': 'solid',
-            'color': '#ffffff',
-            'font-size': '15px',
-            'font-weight': '700',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'text-outline-color': '#4f46e5',
-            'text-outline-width': 1.5,
-            // Premium glow
-            'underlay-color': '#818cf8',
-            'underlay-padding': 8,
-            'underlay-opacity': 0.4,
-            'underlay-shape': 'ellipse',
-            // Shadow effect
-            'shadow-blur': 15,
-            'shadow-color': '#6366f1',
-            'shadow-opacity': 0.6,
-            'shadow-offset-x': 0,
-            'shadow-offset-y': 4,
+        // Person nodes - Premium circular design
+        {
+            selector: 'node[type="person"]',
+            style: {
+                'shape': 'ellipse',
+                'width': 100,
+                'height': 100,
+                // Gradient-like effect using background
+                'background-fill': 'radial-gradient',
+                'background-gradient-stop-colors': (isDark ? personBgDark : personBgLight).join(' '),
+                'background-gradient-stop-positions': '0% 50% 100%',
+                'background-opacity': 0.9,
+                'border-width': 3,
+                'border-color': personBorder,
+                'border-style': 'solid',
+                'color': '#ffffff',
+                'font-size': '15px',
+                'font-weight': '700',
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'text-outline-color': '#4f46e5',
+                'text-outline-width': 1.5,
+                // Premium glow
+                'underlay-color': '#818cf8',
+                'underlay-padding': 8,
+                'underlay-opacity': 0.4,
+                'underlay-shape': 'ellipse',
+                // Shadow effect
+                'shadow-blur': 15,
+                'shadow-color': '#6366f1',
+                'shadow-opacity': 0.6,
+                'shadow-offset-x': 0,
+                'shadow-offset-y': 4,
+            },
         },
-    },
-    // Skill nodes with category-based colors and glows
-    {
-        selector: 'node[type="skill"][category="Frontend"]',
-        style: {
-            'border-color': '#a78bfa',
-            'border-width': 3,
-            'shadow-color': '#8B5CF6',
-            'shadow-blur': 15,
-            'shadow-opacity': 0.5,
-            'underlay-color': '#8B5CF6',
-            'underlay-opacity': 0.25,
+        // Skill nodes with category-based colors and glows
+        {
+            selector: 'node[type="skill"][category="Frontend"]',
+            style: {
+                'border-color': catColors.Frontend,
+                'border-width': 3,
+                'shadow-color': catColors.Frontend,
+                'shadow-blur': 15,
+                'shadow-opacity': 0.5,
+                'underlay-color': catColors.Frontend,
+                'underlay-opacity': 0.25,
+            },
         },
-    },
-    {
-        selector: 'node[type="skill"][category="Backend"]',
-        style: {
-            'border-color': '#f472b6',
-            'border-width': 3,
-            'shadow-color': '#EC4899',
-            'shadow-blur': 15,
-            'shadow-opacity': 0.5,
-            'underlay-color': '#EC4899',
-            'underlay-opacity': 0.25,
+        {
+            selector: 'node[type="skill"][category="Backend"]',
+            style: {
+                'border-color': catColors.Backend,
+                'border-width': 3,
+                'shadow-color': catColors.Backend,
+                'shadow-blur': 15,
+                'shadow-opacity': 0.5,
+                'underlay-color': catColors.Backend,
+                'underlay-opacity': 0.25,
+            },
         },
-    },
-    {
-        selector: 'node[type="skill"][category="DevOps"]',
-        style: {
-            'border-color': '#fb923c',
-            'border-width': 3,
-            'shadow-color': '#F97316',
-            'shadow-blur': 15,
-            'shadow-opacity': 0.5,
-            'underlay-color': '#F97316',
-            'underlay-opacity': 0.25,
+        {
+            selector: 'node[type="skill"][category="DevOps"]',
+            style: {
+                'border-color': catColors.DevOps,
+                'border-width': 3,
+                'shadow-color': catColors.DevOps,
+                'shadow-blur': 15,
+                'shadow-opacity': 0.5,
+                'underlay-color': catColors.DevOps,
+                'underlay-opacity': 0.25,
+            },
         },
-    },
-    {
-        selector: 'node[type="skill"][category="Design"]',
-        style: {
-            'border-color': '#2dd4bf',
-            'border-width': 3,
-            'shadow-color': '#14B8A6',
-            'shadow-blur': 15,
-            'shadow-opacity': 0.5,
-            'underlay-color': '#14B8A6',
-            'underlay-opacity': 0.25,
+        {
+            selector: 'node[type="skill"][category="Design"]',
+            style: {
+                'border-color': catColors.Design,
+                'border-width': 3,
+                'shadow-color': catColors.Design,
+                'shadow-blur': 15,
+                'shadow-opacity': 0.5,
+                'underlay-color': catColors.Design,
+                'underlay-opacity': 0.25,
+            },
         },
-    },
-    {
-        selector: 'node[type="skill"][category="Other"]',
-        style: {
-            'border-color': '#9ca3af',
-            'border-width': 3,
-            'shadow-color': '#6B7280',
-            'shadow-blur': 12,
-            'shadow-opacity': 0.4,
+        {
+            selector: 'node[type="skill"][category="Other"]',
+            style: {
+                'border-color': catColors.Other,
+                'border-width': 3,
+                'shadow-color': catColors.Other,
+                'shadow-blur': 12,
+                'shadow-opacity': 0.4,
+            },
         },
-    },
-    // Highlighted nodes - Enhanced glow effect
-    {
-        selector: 'node.highlighted',
-        style: {
-            'z-index': 1000,
-            'border-width': 4,
-            'width': 175,
-            'height': 62,
-            'transition-duration': '0.3s',
-            'shadow-blur': 25,
-            'shadow-opacity': 0.8,
-            'underlay-padding': 15,
-            'underlay-opacity': 0.5,
+        // Highlighted nodes - Enhanced glow effect
+        {
+            selector: 'node.highlighted',
+            style: {
+                'z-index': 1000,
+                'border-width': highlightWidth,
+                'width': 175,
+                'height': 62,
+                'transition-duration': '0.3s',
+                'shadow-blur': 25,
+                'shadow-opacity': 0.8,
+                'underlay-padding': 15,
+                'underlay-opacity': 0.5,
+            },
         },
-    },
-    // Person highlighted - Premium pulse effect
-    {
-        selector: 'node[type="person"].highlighted',
-        style: {
-            'width': 115,
-            'height': 115,
-            'border-width': 4,
-            'border-color': '#c7d2fe',
-            'shadow-blur': 30,
-            'shadow-color': '#818cf8',
-            'shadow-opacity': 0.9,
-            'underlay-color': '#818cf8',
-            'underlay-padding': 18,
-            'underlay-opacity': 0.6,
+        // Person highlighted - Premium pulse effect
+        {
+            selector: 'node[type="person"].highlighted',
+            style: {
+                'width': 115,
+                'height': 115,
+                'border-width': 4,
+                'border-color': '#c7d2fe',
+                'shadow-blur': 30,
+                'shadow-color': '#818cf8',
+                'shadow-opacity': 0.9,
+                'underlay-color': '#818cf8',
+                'underlay-padding': 18,
+                'underlay-opacity': 0.6,
+            },
         },
-    },
-    // Dimmed nodes
-    {
-        selector: 'node.dimmed',
-        style: {
-            'opacity': 0.25,
+        // Dimmed nodes
+        {
+            selector: 'node.dimmed',
+            style: {
+                'opacity': 0.25,
+            },
         },
-    },
-    // Hover effect for nodes - Interactive scaling
-    {
-        selector: 'node:active',
-        style: {
-            'overlay-opacity': 0,
-            'border-width': 4,
-            'shadow-blur': 20,
-            'shadow-opacity': 0.7,
+        // Hover effect for nodes - Interactive scaling
+        {
+            selector: 'node:active',
+            style: {
+                'overlay-opacity': 0,
+                'border-width': 4,
+                'shadow-blur': 20,
+                'shadow-opacity': 0.7,
+            },
         },
-    },
-    // Base edge styles
-    {
-        selector: 'edge',
-        style: {
-            'width': 2.5,
-            'line-color': '#475569',
-            'target-arrow-shape': 'none',
-            'curve-style': 'bezier',
-            'opacity': 0.5,
-            'line-style': 'dashed',
-            'line-dash-pattern': [8, 8],
-            'line-dash-offset': 0,
-            'transition-property': 'width, opacity, line-color',
-            'transition-duration': '0.3s',
-            'transition-timing-function': 'ease-out',
+        // Base edge styles
+        {
+            selector: 'edge',
+            style: {
+                'width': 2.5,
+                'line-color': isDark ? '#475569' : '#cbd5e1',
+                'target-arrow-shape': 'none',
+                'curve-style': 'bezier',
+                'opacity': 0.5,
+                'line-style': 'dashed',
+                'line-dash-pattern': [8, 8],
+                'line-dash-offset': 0,
+                'transition-property': 'width, opacity, line-color',
+                'transition-duration': '0.3s',
+                'transition-timing-function': 'ease-out',
+            },
         },
-    },
-    // Edge colors by proficiency
-    {
-        selector: 'edge[proficiency="learning"]',
-        style: {
-            'line-color': PROFICIENCY_COLOR.learning,
+        // Edge colors by proficiency
+        {
+            selector: 'edge[proficiency="learning"]',
+            style: {
+                'line-color': PROFICIENCY_COLOR.learning,
+            },
         },
-    },
-    {
-        selector: 'edge[proficiency="familiar"]',
-        style: {
-            'line-color': PROFICIENCY_COLOR.familiar,
+        {
+            selector: 'edge[proficiency="familiar"]',
+            style: {
+                'line-color': PROFICIENCY_COLOR.familiar,
+            },
         },
-    },
-    {
-        selector: 'edge[proficiency="expert"]',
-        style: {
-            'line-color': PROFICIENCY_COLOR.expert,
+        {
+            selector: 'edge[proficiency="expert"]',
+            style: {
+                'line-color': PROFICIENCY_COLOR.expert,
+            },
         },
-    },
-    // Highlighted edges
-    {
-        selector: 'edge.highlighted',
-        style: {
-            'width': 4,
-            'opacity': 1,
-            'z-index': 999,
-            'line-style': 'solid', // optional: switch to solid, or keep dashed and glow
+        // Highlighted edges
+        {
+            selector: 'edge.highlighted',
+            style: {
+                'width': 4,
+                'opacity': 1,
+                'z-index': 999,
+                'line-style': 'solid', // optional: switch to solid, or keep dashed and glow
+            },
         },
-    },
-    // Dimmed edges
-    {
-        selector: 'edge.dimmed',
-        style: {
-            'opacity': 0.15,
+        // Dimmed edges
+        {
+            selector: 'edge.dimmed',
+            style: {
+                'opacity': 0.15,
+            },
         },
-    },
-    // Edge hover effect
-    {
-        selector: 'edge:active',
-        style: {
-            'width': 3.5,
-            'opacity': 1,
+        // Edge hover effect
+        {
+            selector: 'edge:active',
+            style: {
+                'width': 3.5,
+                'opacity': 1,
+            },
         },
-    },
-];
+    ];
+};

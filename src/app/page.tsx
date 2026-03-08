@@ -143,9 +143,10 @@ export default function HomePage() {
               onDeleteSkill={deleteSkill}
               onDeleteConnection={deleteConnection}
               onEditConnectionProficiency={editConnectionProficiency}
+              theme={theme}
             />
           ) : (
-            <SummaryPanel state={state} />
+            <SummaryPanel state={state} theme={theme} />
           )}
         </aside>
       </div>

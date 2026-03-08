@@ -12,6 +12,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { X, Pencil, Trash2, Check, XCircle } from 'lucide-react';
+import SkillRadarChart from './charts/SkillRadarChart';
 
 const CATEGORIES = ['Frontend', 'Backend', 'DevOps', 'Design', 'Other'];
 const PROFICIENCY_OPTIONS: Proficiency[] = ['learning', 'familiar', 'expert'];
@@ -89,6 +90,7 @@ interface Props {
     onDeleteSkill: (id: string) => void;
     onDeleteConnection: (personId: string, skillId: string) => void;
     onEditConnectionProficiency: (personId: string, skillId: string, proficiency: Proficiency) => void;
+    theme: 'light' | 'dark';
 }
 
 export default function DetailPanel({
@@ -96,6 +98,7 @@ export default function DetailPanel({
     onClose, onEditPerson, onDeletePerson,
     onEditSkill, onDeleteSkill, onDeleteConnection,
     onEditConnectionProficiency,
+    theme,
 }: Props) {
     const [editing, setEditing] = useState(false);
     const [nameVal, setNameVal] = useState('');
@@ -186,6 +189,21 @@ export default function DetailPanel({
                         </div>
                     ))}
                 </div>
+
+                {/* Personal Skill Radar Chart */}
+                {connections.length > 0 && (
+                    <div className="chart-section">
+                        <h3 className="chart-title">🎯 Skill Profile</h3>
+                        <SkillRadarChart
+                            skills={connections.map((c) => ({
+                                skill: c.skill.name,
+                                proficiency:
+                                    c.proficiency === 'expert' ? 3 : c.proficiency === 'familiar' ? 2 : 1,
+                            }))}
+                            theme={theme}
+                        />
+                    </div>
+                )}
 
                 <Separator className="my-3" />
 

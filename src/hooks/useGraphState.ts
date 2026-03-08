@@ -69,9 +69,12 @@ export function useGraphState() {
         setIsHydrated(true);
     }, []);
 
-    const update = useCallback((next: GraphState) => {
-        setState(next);
-        saveGraphState(next);
+    const update = useCallback((next: GraphState | ((prev: GraphState) => GraphState)) => {
+        setState((prev) => {
+            const nextState = typeof next === 'function' ? next(prev) : next;
+            saveGraphState(nextState);
+            return nextState;
+        });
     }, []);
 
     // ── People ─────────────────────────────────────────────────────────────────
@@ -83,36 +86,36 @@ export function useGraphState() {
         const SPACING = 120;
         const leftX = PADDING;
 
-        // Find the lowest Y position among existing people, or start at top
-        const existingYPositions = state.people
-            .map(p => p.y)
-            .filter((y): y is number => y !== undefined);
-        const newY = existingYPositions.length > 0
-            ? Math.max(...existingYPositions) + SPACING
-            : PADDING;
+        update((prev) => {
+            const existingYPositions = prev.people
+                .map(p => p.y)
+                .filter((y): y is number => y !== undefined);
+            const newY = existingYPositions.length > 0
+                ? Math.max(...existingYPositions) + SPACING
+                : PADDING;
 
-        const next: GraphState = {
-            ...state,
-            people: [...state.people, { id, name, role, x: leftX, y: newY }],
-        };
-        update(next);
-    }, [state, update]);
+            return {
+                ...prev,
+                people: [...prev.people, { id, name, role, x: leftX, y: newY }],
+            };
+        });
+    }, [update]);
 
     const editPerson = useCallback((id: string, name: string, role?: string) => {
-        update({
-            ...state,
-            people: state.people.map((p) => (p.id === id ? { ...p, name, role } : p)),
-        });
-    }, [state, update]);
+        update((prev) => ({
+            ...prev,
+            people: prev.people.map((p) => (p.id === id ? { ...p, name, role } : p)),
+        }));
+    }, [update]);
 
     const deletePerson = useCallback((id: string) => {
-        update({
-            ...state,
-            people: state.people.filter((p) => p.id !== id),
-            connections: state.connections.filter((c) => c.personId !== id),
-        });
+        update((prev) => ({
+            ...prev,
+            people: prev.people.filter((p) => p.id !== id),
+            connections: prev.connections.filter((c) => c.personId !== id),
+        }));
         setSelectedNode(null);
-    }, [state, update]);
+    }, [update]);
 
     // ── Skills ─────────────────────────────────────────────────────────────────
     const addSkill = useCallback((name: string, category?: string) => {
@@ -124,77 +127,82 @@ export function useGraphState() {
         const canvasWidth = 1200;
         const rightX = canvasWidth - PADDING;
 
-        // Find the lowest Y position among existing skills, or start at top
-        const existingYPositions = state.skills
-            .map(s => s.y)
-            .filter((y): y is number => y !== undefined);
-        const newY = existingYPositions.length > 0
-            ? Math.max(...existingYPositions) + SPACING
-            : PADDING;
+        update((prev) => {
+            const existingYPositions = prev.skills
+                .map(s => s.y)
+                .filter((y): y is number => y !== undefined);
+            const newY = existingYPositions.length > 0
+                ? Math.max(...existingYPositions) + SPACING
+                : PADDING;
 
-        update({
-            ...state,
-            skills: [...state.skills, { id, name, category, x: rightX, y: newY }],
+            return {
+                ...prev,
+                skills: [...prev.skills, { id, name, category, x: rightX, y: newY }],
+            };
         });
-    }, [state, update]);
+    }, [update]);
 
     const editSkill = useCallback((id: string, name: string, category?: string) => {
-        update({
-            ...state,
-            skills: state.skills.map((s) => (s.id === id ? { ...s, name, category } : s)),
-        });
-    }, [state, update]);
+        update((prev) => ({
+            ...prev,
+            skills: prev.skills.map((s) => (s.id === id ? { ...s, name, category } : s)),
+        }));
+    }, [update]);
 
     const deleteSkill = useCallback((id: string) => {
-        update({
-            ...state,
-            skills: state.skills.filter((s) => s.id !== id),
-            connections: state.connections.filter((c) => c.skillId !== id),
-        });
+        update((prev) => ({
+            ...prev,
+            skills: prev.skills.filter((s) => s.id !== id),
+            connections: prev.connections.filter((c) => c.skillId !== id),
+        }));
         setSelectedNode(null);
-    }, [state, update]);
+    }, [update]);
 
     // ── Connections ────────────────────────────────────────────────────────────
     const addConnection = useCallback((personId: string, skillId: string, proficiency: Proficiency) => {
-        const exists = state.connections.some(
-            (c) => c.personId === personId && c.skillId === skillId,
-        );
-        if (exists) return;
-        update({
-            ...state,
-            connections: [...state.connections, { personId, skillId, proficiency }],
+        update((prev) => {
+            const exists = prev.connections.some(
+                (c) => c.personId === personId && c.skillId === skillId,
+            );
+            if (exists) return prev;
+            return {
+                ...prev,
+                connections: [...prev.connections, { personId, skillId, proficiency }],
+            };
         });
-    }, [state, update]);
+    }, [update]);
 
     const deleteConnection = useCallback((personId: string, skillId: string) => {
-        update({
-            ...state,
-            connections: state.connections.filter(
+        update((prev) => ({
+            ...prev,
+            connections: prev.connections.filter(
                 (c) => !(c.personId === personId && c.skillId === skillId),
             ),
-        });
-    }, [state, update]);
+        }));
+    }, [update]);
 
     const editConnectionProficiency = useCallback((personId: string, skillId: string, proficiency: Proficiency) => {
-        update({
-            ...state,
-            connections: state.connections.map((c) =>
+        update((prev) => ({
+            ...prev,
+            connections: prev.connections.map((c) =>
                 c.personId === personId && c.skillId === skillId
                     ? { ...c, proficiency }
                     : c
             ),
-        });
-    }, [state, update]);
+        }));
+    }, [update]);
 
     // ── Node position persistence ──────────────────────────────────────────────
     const updateNodePosition = useCallback((id: string, x: number, y: number) => {
-        const isPerson = state.people.some((p) => p.id === id);
-        if (isPerson) {
-            update({ ...state, people: state.people.map((p) => (p.id === id ? { ...p, x, y } : p)) });
-        } else {
-            update({ ...state, skills: state.skills.map((s) => (s.id === id ? { ...s, x, y } : s)) });
-        }
-    }, [state, update]);
+        update((prev) => {
+            const isPerson = prev.people.some((p) => p.id === id);
+            if (isPerson) {
+                return { ...prev, people: prev.people.map((p) => (p.id === id ? { ...p, x, y } : p)) };
+            } else {
+                return { ...prev, skills: prev.skills.map((s) => (s.id === id ? { ...s, x, y } : s)) };
+            }
+        });
+    }, [update]);
 
     // ── Reset ─────────────────────────────────────────────────────────────────
     const resetToSeed = useCallback(() => {

@@ -70,6 +70,11 @@
     --glow-2: rgba(236, 72, 153, 0.03);
     --control-bg: #ffffff;
     --control-hover: #f1f5f9;
+
+    /* Glassmorphism variables */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: rgba(0, 0, 0, 0.1);
   }
 
   .dark,
@@ -107,6 +112,11 @@
     --glow-2: rgba(236, 72, 153, 0.1);
     --control-bg: rgba(30, 41, 59, 0.9);
     --control-hover: #334155;
+
+    /* Glassmorphism dark theme */
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -142,9 +152,12 @@
   justify-content: space-between;
   padding: 0 20px;
   height: 60px;
-  background: var(--panel-bg);
-  border-bottom: 1px solid var(--panel-border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px var(--glass-shadow);
   z-index: 10;
   transition: background-color 0.3s, border-color 0.3s;
 }
@@ -465,10 +478,12 @@
   bottom: 20px;
   left: 20px;
   z-index: 10;
-  background: var(--control-bg);
-  border: 1px solid var(--panel-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 16px var(--glass-shadow);
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -502,8 +517,11 @@
   right: 20px;
   width: 200px;
   height: 150px;
-  background: var(--control-bg);
-  border: 2px solid var(--panel-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 16px var(--glass-shadow);
   border-radius: 8px;
   overflow: hidden;
   z-index: 10;
@@ -540,12 +558,15 @@
 /* ────────────────────────────────────────────────────────────────────────── */
 .right-sidebar {
   width: 340px;
-  background: var(--panel-bg);
-  border-left: 1px solid var(--panel-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-left: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px var(--glass-shadow);
   display: flex;
   flex-direction: column;
   z-index: 10;
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.03);
   transition: background-color 0.3s, border-color 0.3s;
 }
 
@@ -1021,4 +1042,96 @@
 .submit-btn {
   margin-top: 8px;
   width: 100%;
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Glassmorphism Utility Classes                                             */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px var(--glass-shadow);
+}
+
+.glass-control {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 16px var(--glass-shadow);
+}
+
+.glass-dialog {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(200%);
+  -webkit-backdrop-filter: blur(16px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 12px 48px var(--glass-shadow);
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(12px)) {
+  .glass-panel,
+  .glass-control,
+  .glass-dialog {
+    background: var(--panel-bg);
+    border: 2px solid var(--panel-border);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Chart Styles                                                               */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+.chart-section {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--app-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+
+.chart-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-subfg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Layout Switcher Styles                                                     */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+.layout-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 16px var(--glass-shadow);
+  border-radius: 6px;
+  position: absolute;
+  bottom: 20px;
+  left: 80px;
+  z-index: 10;
+}
+
+.layout-icon {
+  color: var(--app-subfg);
+}
+
+.layout-select {
+  height: 28px;
+  min-width: 140px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
 }

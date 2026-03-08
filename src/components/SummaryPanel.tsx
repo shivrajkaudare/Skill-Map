@@ -3,10 +3,15 @@
 import { useMemo } from 'react';
 import { GraphState } from '@/lib/types';
 import { BarChart3 } from 'lucide-react';
+import SkillDistributionChart from './charts/SkillDistributionChart';
+import ProficiencyBreakdownChart from './charts/ProficiencyBreakdownChart';
 
-interface Props { state: GraphState }
+interface Props {
+  state: GraphState;
+  theme: 'light' | 'dark';
+}
 
-export default function SummaryPanel({ state }: Props) {
+export default function SummaryPanel({ state, theme }: Props) {
     const stats = useMemo(() => {
         const { people, skills, connections } = state;
 
@@ -39,6 +44,26 @@ export default function SummaryPanel({ state }: Props) {
         const topPersonCnt = topPersonId ? personCount[topPersonId] : 0;
 
         return { topSkill, topSkillCnt, gapSkills, unknownSkills, topPerson, topPersonCnt };
+    }, [state]);
+
+    // Chart data calculations
+    const categoryData = useMemo(() => {
+        const { skills } = state;
+        const categoryCount: Record<string, number> = {};
+        skills.forEach((skill) => {
+            const cat = skill.category || 'Other';
+            categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+        });
+        return Object.entries(categoryCount).map(([category, count]) => ({ category, count }));
+    }, [state]);
+
+    const proficiencyData = useMemo(() => {
+        const { connections } = state;
+        const profCount: Record<string, number> = {};
+        connections.forEach((conn) => {
+            profCount[conn.proficiency] = (profCount[conn.proficiency] || 0) + 1;
+        });
+        return Object.entries(profCount).map(([proficiency, count]) => ({ proficiency, count }));
     }, [state]);
 
     return (
@@ -100,6 +125,22 @@ export default function SummaryPanel({ state }: Props) {
                             <span key={s.id} className="gap-chip gap-chip-red">{s.name}</span>
                         ))}
                     </div>
+                </div>
+            )}
+
+            {/* Skill Distribution Chart */}
+            {categoryData.length > 0 && (
+                <div className="chart-section">
+                    <h3 className="chart-title">📊 Skill Distribution</h3>
+                    <SkillDistributionChart data={categoryData} theme={theme} />
+                </div>
+            )}
+
+            {/* Proficiency Breakdown Chart */}
+            {proficiencyData.length > 0 && (
+                <div className="chart-section">
+                    <h3 className="chart-title">📈 Proficiency Breakdown</h3>
+                    <ProficiencyBreakdownChart data={proficiencyData} theme={theme} />
                 </div>
             )}
         </div>
