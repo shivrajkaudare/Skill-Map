@@ -1,11 +1,14 @@
 'use client';
 
 import { memo } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
 import { SkillNode as SkillNodeType } from '@/lib/types';
-import { CATEGORY_COLOR } from '@/lib/graphHelpers';
+import { CATEGORY_COLOR } from '@/lib/cytoscapeHelpers';
 
-type SkillNodeData = { skill: SkillNodeType; dimmed?: boolean };
+type SkillNodeData = { skill: SkillNodeType; dimmed?: boolean; selected?: boolean };
+
+interface Props {
+    data: SkillNodeData;
+}
 
 const CATEGORY_ICON: Record<string, string> = {
     Frontend: '🎨',
@@ -15,8 +18,8 @@ const CATEGORY_ICON: Record<string, string> = {
     Other: '💡',
 };
 
-function SkillNodeComponent({ data, selected }: NodeProps) {
-    const { skill, dimmed } = data as SkillNodeData;
+function SkillNodeComponent({ data }: Props) {
+    const { skill, dimmed, selected } = data;
     const color = CATEGORY_COLOR[skill.category ?? 'Other'] ?? CATEGORY_COLOR.Other;
     const icon = CATEGORY_ICON[skill.category ?? 'Other'] ?? '💡';
 
@@ -28,9 +31,6 @@ function SkillNodeComponent({ data, selected }: NodeProps) {
             style={{ borderColor: color }}
             title={skill.category}
         >
-            <Handle type="source" position={Position.Right} className="react-flow__handle" />
-            <Handle type="target" position={Position.Left} className="react-flow__handle" />
-
             <span className="skill-icon">{icon}</span>
             <div className="skill-info">
                 <span className="skill-name">{skill.name}</span>

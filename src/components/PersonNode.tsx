@@ -1,13 +1,16 @@
 'use client';
 
 import { memo } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
 import { PersonNode as PersonNodeType } from '@/lib/types';
 
-type PersonNodeData = { person: PersonNodeType; dimmed?: boolean };
+type PersonNodeData = { person: PersonNodeType; dimmed?: boolean; selected?: boolean };
 
-function PersonNodeComponent({ data, selected }: NodeProps) {
-    const { person, dimmed } = data as PersonNodeData;
+interface Props {
+    data: PersonNodeData;
+}
+
+function PersonNodeComponent({ data }: Props) {
+    const { person, dimmed, selected } = data;
     return (
         <div
             className="person-node"
@@ -15,9 +18,6 @@ function PersonNodeComponent({ data, selected }: NodeProps) {
             data-dimmed={dimmed}
             title={person.role}
         >
-            <Handle type="source" position={Position.Right} className="react-flow__handle" />
-            <Handle type="target" position={Position.Left} className="react-flow__handle" />
-
             <div className="person-avatar">
                 {person.name.charAt(0).toUpperCase()}
             </div>

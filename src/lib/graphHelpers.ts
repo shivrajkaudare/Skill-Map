@@ -25,12 +25,36 @@ export const CATEGORY_COLOR: Record<string, string> = {
 
 // ─── Layout helpers ───────────────────────────────────────────────────────────
 
-/** Very simple two-ring layout: people in an outer circle, skills in an inner circle */
-function circlePositions(count: number, radius: number, cx: number, cy: number) {
-    return Array.from({ length: count }, (_, i) => {
-        const angle = (2 * Math.PI * i) / count - Math.PI / 2;
-        return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
-    });
+/** Bipartite layout: people on left column, skills on right column */
+function bipartiteLayout(
+    peopleCount: number,
+    skillsCount: number,
+    canvasWidth = 1200,
+    canvasHeight = 800
+) {
+    const PADDING = 100;
+    const leftX = PADDING;
+    const rightX = canvasWidth - PADDING;
+
+    // Calculate vertical spacing
+    const personSpacing = Math.min(120, (canvasHeight - 2 * PADDING) / Math.max(peopleCount - 1, 1));
+    const skillSpacing = Math.min(120, (canvasHeight - 2 * PADDING) / Math.max(skillsCount - 1, 1));
+
+    // Center the nodes vertically
+    const peopleStartY = (canvasHeight - (peopleCount - 1) * personSpacing) / 2;
+    const skillsStartY = (canvasHeight - (skillsCount - 1) * skillSpacing) / 2;
+
+    const personPositions = Array.from({ length: peopleCount }, (_, i) => ({
+        x: leftX,
+        y: peopleStartY + i * personSpacing,
+    }));
+
+    const skillPositions = Array.from({ length: skillsCount }, (_, i) => ({
+        x: rightX,
+        y: skillsStartY + i * skillSpacing,
+    }));
+
+    return { personPositions, skillPositions };
 }
 
 // ─── Main converter ───────────────────────────────────────────────────────────
@@ -38,9 +62,7 @@ function circlePositions(count: number, radius: number, cx: number, cy: number) 
 export function buildReactFlowElements(state: GraphState): { nodes: Node[]; edges: Edge[] } {
     const { people, skills, connections } = state;
 
-    const CX = 600, CY = 400;
-    const personPositions = circlePositions(people.length, 340, CX, CY);
-    const skillPositions = circlePositions(skills.length, 160, CX, CY);
+    const { personPositions, skillPositions } = bipartiteLayout(people.length, skills.length);
 
     // ── Nodes ──────────────────────────────────────────────────────────────────
     const personNodes: Node[] = people.map((p, i) => ({
@@ -70,23 +92,17 @@ export function buildReactFlowElements(state: GraphState): { nodes: Node[]; edge
         id: `${c.personId}-${c.skillId}`,
         source: c.personId,
         target: c.skillId,
-        label: c.proficiency,
-        type: 'smoothstep',
+        type: 'default', // Use bezier curves for cleaner connections
+        animated: false,
         style: {
             stroke: PROFICIENCY_COLOR[c.proficiency],
-            strokeWidth: 2,
+            strokeWidth: 2.5,
+            strokeOpacity: 0.6,
         },
-        labelStyle: {
-            fill: PROFICIENCY_COLOR[c.proficiency],
-            fontWeight: 600,
-            fontSize: 11,
+        data: {
+            proficiency: c.proficiency,
+            label: c.proficiency, // Store label in data instead of showing always
         },
-        labelBgStyle: {
-            fill: PROFICIENCY_BG[c.proficiency],
-            fillOpacity: 0.9,
-            rx: 4,
-        },
-        data: { proficiency: c.proficiency },
     }));
 
     return { nodes: [...personNodes, ...skillNodes], edges };
