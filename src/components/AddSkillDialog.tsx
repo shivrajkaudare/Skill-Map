@@ -18,9 +18,10 @@ const CATEGORIES = ['Frontend', 'Backend', 'DevOps', 'Design', 'Other'];
 
 interface Props {
     onAdd: (name: string, category?: string) => void;
+    existingSkills: string[];
 }
 
-export default function AddSkillDialog({ onAdd }: Props) {
+export default function AddSkillDialog({ onAdd, existingSkills }: Props) {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
@@ -32,6 +33,17 @@ export default function AddSkillDialog({ onAdd }: Props) {
             setError('Skill name is required');
             return;
         }
+
+        // Check for duplicate skill (case-insensitive)
+        const isDuplicate = existingSkills.some(
+            skill => skill.toLowerCase() === name.trim().toLowerCase()
+        );
+
+        if (isDuplicate) {
+            setError('This skill already exists');
+            return;
+        }
+
         onAdd(name.trim(), category || undefined);
         setName('');
         setCategory('');

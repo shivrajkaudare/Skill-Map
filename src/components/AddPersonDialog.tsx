@@ -12,9 +12,10 @@ import { UserPlus } from 'lucide-react';
 
 interface Props {
     onAdd: (name: string, role?: string) => void;
+    existingPeople: Array<{ name: string; role?: string }>;
 }
 
-export default function AddPersonDialog({ onAdd }: Props) {
+export default function AddPersonDialog({ onAdd, existingPeople }: Props) {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [role, setRole] = useState('');
@@ -26,6 +27,22 @@ export default function AddPersonDialog({ onAdd }: Props) {
             setError('Name is required');
             return;
         }
+
+        // Check for duplicate person (same name AND same role, case-insensitive)
+        const trimmedName = name.trim();
+        const trimmedRole = role.trim() || undefined;
+
+        const isDuplicate = existingPeople.some(
+            person =>
+                person.name.toLowerCase() === trimmedName.toLowerCase() &&
+                (person.role?.toLowerCase() || undefined) === (trimmedRole?.toLowerCase() || undefined)
+        );
+
+        if (isDuplicate) {
+            setError('A person with this name and role already exists');
+            return;
+        }
+
         onAdd(name.trim(), role.trim() || undefined);
         setName('');
         setRole('');

@@ -8,7 +8,8 @@ import AddPersonDialog from '@/components/AddPersonDialog';
 import AddSkillDialog from '@/components/AddSkillDialog';
 import AddConnectionDialog from '@/components/AddConnectionDialog';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Network } from 'lucide-react';
+import { Network, Moon, Sun } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 // Dynamically import graph to prevent SSR issues with React Flow
 const SkillGraph = dynamic(() => import('@/components/SkillGraph'), { ssr: false });
@@ -19,14 +20,43 @@ export default function HomePage() {
     addPerson, editPerson, deletePerson,
     addSkill, editSkill, deleteSkill,
     addConnection, deleteConnection, editConnectionProficiency,
-    updateNodePosition, resetToSeed,
+    updateNodePosition,
   } = useGraphState();
 
   const selectedPersonId = selectedNode?.type === 'person' ? selectedNode.id : null;
   const selectedSkillId = selectedNode?.type === 'skill' ? selectedNode.id : null;
 
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Load initial theme from localStorage safely
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('skillsmap-theme');
+    const computedTheme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark';
+    setTheme(computedTheme);
+    if (computedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('skillsmap-theme', newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  };
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell theme-${theme} ${theme === 'dark' ? 'dark' : ''}`} data-theme={theme}>
       {/* ── Top Bar ─────────────────────────────────────────────── */}
       <header className="top-bar">
         <div className="top-bar-left">
@@ -60,8 +90,14 @@ export default function HomePage() {
           </div>
 
           {/* CRUD buttons */}
-          <AddPersonDialog onAdd={addPerson} />
-          <AddSkillDialog onAdd={addSkill} />
+          <AddPersonDialog
+            onAdd={addPerson}
+            existingPeople={state.people.map(p => ({ name: p.name, role: p.role }))}
+          />
+          <AddSkillDialog
+            onAdd={addSkill}
+            existingSkills={state.skills.map(s => s.name)}
+          />
           <AddConnectionDialog
             people={state.people}
             skills={state.skills}
@@ -71,11 +107,11 @@ export default function HomePage() {
           <Button
             size="sm"
             variant="ghost"
-            className="reset-btn"
-            onClick={resetToSeed}
-            title="Reset to seed data"
+            className="theme-btn"
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
-            <RotateCcw size={14} />
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
         </div>
       </header>
@@ -89,6 +125,7 @@ export default function HomePage() {
             selectedNode={selectedNode}
             onSelectNode={setSelectedNode}
             onUpdateNodePosition={updateNodePosition}
+            theme={theme}
           />
         </div>
 
