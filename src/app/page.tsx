@@ -9,7 +9,7 @@ import AddSkillDialog from '@/components/AddSkillDialog';
 import AddConnectionDialog from '@/components/AddConnectionDialog';
 import { Button } from '@/components/ui/button';
 import { Network, Moon, Sun } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Dynamically import graph to prevent SSR issues with React Flow
 const SkillGraph = dynamic(() => import('@/components/SkillGraph'), { ssr: false });
@@ -27,6 +27,9 @@ export default function HomePage() {
   const selectedSkillId = selectedNode?.type === 'skill' ? selectedNode.id : null;
 
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [sidebarWidth, setSidebarWidth] = useState(340);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Load initial theme from localStorage safely
   useEffect(() => {
@@ -54,6 +57,43 @@ export default function HomePage() {
       document.documentElement.setAttribute('data-theme', 'light');
     }
   };
+
+  // Resize handlers
+  const handleMouseDown = useCallback(() => {
+    setIsResizing(true);
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    const newWidth = window.innerWidth - e.clientX;
+    const maxWidth = window.innerWidth * 0.4; // 40% of screen width
+    // Min width: 280px, Max width: 40% of screen
+    if (newWidth >= 280 && newWidth <= maxWidth) {
+      setSidebarWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return (
     <div className={`app-shell theme-${theme} ${theme === 'dark' ? 'dark' : ''}`} data-theme={theme}>
@@ -130,7 +170,17 @@ export default function HomePage() {
         </div>
 
         {/* Right Sidebar */}
-        <aside className="right-sidebar">
+        <aside
+          ref={sidebarRef}
+          className="right-sidebar"
+          style={{ width: `${sidebarWidth}px` }}
+        >
+          {/* Resize Handle */}
+          <div
+            className="resize-handle"
+            onMouseDown={handleMouseDown}
+          />
+
           {(selectedPersonId || selectedSkillId) ? (
             <DetailPanel
               state={state}

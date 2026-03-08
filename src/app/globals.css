@@ -557,7 +557,8 @@
 /* Right Sidebar Panels (Detail / Summary)                                    */
 /* ────────────────────────────────────────────────────────────────────────── */
 .right-sidebar {
-  width: 340px;
+  min-width: 280px;
+  max-width: 40vw;
   background: var(--glass-bg);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
@@ -568,6 +569,58 @@
   flex-direction: column;
   z-index: 10;
   transition: background-color 0.3s, border-color 0.3s;
+  position: relative;
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+  background: transparent;
+  z-index: 1000;
+  transition: all 0.2s;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 60px;
+  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  opacity: 0.3;
+  transition: all 0.2s;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+.resize-handle:hover {
+  width: 12px;
+}
+
+.resize-handle:hover::before {
+  opacity: 1;
+  width: 5px;
+  height: 80px;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.8);
+}
+
+.resize-handle:active {
+  background: rgba(99, 102, 241, 0.15);
+  width: 14px;
+}
+
+.resize-handle:active::before {
+  opacity: 1;
+  width: 5px;
+  height: 100px;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 1);
 }
 
 .detail-panel,
@@ -576,6 +629,37 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar styling for summary panel */
+.summary-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.summary-panel::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.3);
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+.summary-panel::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.4);
+}
+
+.summary-panel::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #818cf8 0%, #a78bfa 100%);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+/* For Firefox */
+.summary-panel {
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 rgba(30, 41, 59, 0.3);
 }
 
 /* Detail Panel Header */
