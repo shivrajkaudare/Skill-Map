@@ -1,4 +1,4 @@
-import type { ElementDefinition, Stylesheet } from 'cytoscape';
+import type { ElementDefinition } from 'cytoscape';
 import { GraphState, SelectedNode, Proficiency } from './types';
 
 // ─── Proficiency colours (edge + badge) ──────────────────────────────────────
@@ -139,74 +139,171 @@ export function getHighlightedElements(
 
 // ─── Cytoscape Stylesheet ──────────────────────────────────────────────────────
 
-export const cytoscapeStylesheet: Stylesheet[] = [
-    // Base node styles
+export const cytoscapeStylesheet: any[] = [
+    // Base node styles - Premium card design
     {
         selector: 'node',
         style: {
-            'width': 140,
-            'height': 44,
-            'shape': 'roundrectangle',
-            'background-color': '#ffffff',
-            'border-width': 2,
-            'border-color': '#e2e8f0',
+            'width': 160,
+            'height': 56,
+            'shape': 'round-rectangle',
+            // Gradient background
+            'background-fill': 'linear-gradient',
+            'background-gradient-direction': 'to-bottom',
+            'background-gradient-stop-colors': '#334155 #1e293b',
+            'background-gradient-stop-positions': '0% 100%',
+            'border-width': 2.5,
+            'border-color': '#475569',
+            'border-style': 'solid',
             'label': 'data(label)',
-            'font-size': '13px',
-            'font-weight': '600',
-            'color': '#0f172a',
+            'font-size': '14px',
+            'font-family': 'system-ui, -apple-system, sans-serif',
+            'font-weight': '700',
+            'color': '#f1f5f9',
             'text-valign': 'center',
             'text-halign': 'center',
             'cursor': 'pointer',
-            'transition-property': 'border-width, border-color, background-color',
-            'transition-duration': '0.2s',
+            'text-outline-color': '#0f172a',
+            'text-outline-width': 1,
+            // Smooth transitions
+            'transition-property': 'border-width, border-color, background-color, width, height, shadow-blur',
+            'transition-duration': '0.3s',
+            'transition-timing-function': 'cubic-bezier(0.4, 0, 0.2, 1)',
+            // Premium shadow
+            'shadow-blur': 12,
+            'shadow-color': '#000000',
+            'shadow-opacity': 0.4,
+            'shadow-offset-x': 0,
+            'shadow-offset-y': 3,
+            // Subtle glow
+            'underlay-color': '#475569',
+            'underlay-padding': 5,
+            'underlay-opacity': 0.2,
+            'underlay-shape': 'round-rectangle',
         },
     },
-    // Person nodes
+    // Person nodes - Premium circular design
     {
         selector: 'node[type="person"]',
         style: {
-            'background-color': '#6366f1',
-            'border-color': '#e2e8f0',
+            'shape': 'ellipse',
+            'width': 100,
+            'height': 100,
+            // Gradient-like effect using background
+            'background-fill': 'radial-gradient',
+            'background-gradient-stop-colors': '#818cf8 #6366f1 #4f46e5',
+            'background-gradient-stop-positions': '0% 50% 100%',
+            'border-width': 3,
+            'border-color': '#a5b4fc',
+            'border-style': 'solid',
             'color': '#ffffff',
+            'font-size': '15px',
+            'font-weight': '700',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-outline-color': '#4f46e5',
+            'text-outline-width': 1.5,
+            // Premium glow
+            'underlay-color': '#818cf8',
+            'underlay-padding': 8,
+            'underlay-opacity': 0.4,
+            'underlay-shape': 'ellipse',
+            // Shadow effect
+            'shadow-blur': 15,
+            'shadow-color': '#6366f1',
+            'shadow-opacity': 0.6,
+            'shadow-offset-x': 0,
+            'shadow-offset-y': 4,
         },
     },
-    // Skill nodes with category-based border colors
+    // Skill nodes with category-based colors and glows
     {
         selector: 'node[type="skill"][category="Frontend"]',
         style: {
-            'border-color': '#8B5CF6',
+            'border-color': '#a78bfa',
+            'border-width': 3,
+            'shadow-color': '#8B5CF6',
+            'shadow-blur': 15,
+            'shadow-opacity': 0.5,
+            'underlay-color': '#8B5CF6',
+            'underlay-opacity': 0.25,
         },
     },
     {
         selector: 'node[type="skill"][category="Backend"]',
         style: {
-            'border-color': '#EC4899',
+            'border-color': '#f472b6',
+            'border-width': 3,
+            'shadow-color': '#EC4899',
+            'shadow-blur': 15,
+            'shadow-opacity': 0.5,
+            'underlay-color': '#EC4899',
+            'underlay-opacity': 0.25,
         },
     },
     {
         selector: 'node[type="skill"][category="DevOps"]',
         style: {
-            'border-color': '#F97316',
+            'border-color': '#fb923c',
+            'border-width': 3,
+            'shadow-color': '#F97316',
+            'shadow-blur': 15,
+            'shadow-opacity': 0.5,
+            'underlay-color': '#F97316',
+            'underlay-opacity': 0.25,
         },
     },
     {
         selector: 'node[type="skill"][category="Design"]',
         style: {
-            'border-color': '#14B8A6',
+            'border-color': '#2dd4bf',
+            'border-width': 3,
+            'shadow-color': '#14B8A6',
+            'shadow-blur': 15,
+            'shadow-opacity': 0.5,
+            'underlay-color': '#14B8A6',
+            'underlay-opacity': 0.25,
         },
     },
     {
         selector: 'node[type="skill"][category="Other"]',
         style: {
-            'border-color': '#6B7280',
+            'border-color': '#9ca3af',
+            'border-width': 3,
+            'shadow-color': '#6B7280',
+            'shadow-blur': 12,
+            'shadow-opacity': 0.4,
         },
     },
-    // Highlighted nodes
+    // Highlighted nodes - Enhanced glow effect
     {
         selector: 'node.highlighted',
         style: {
             'z-index': 1000,
-            'border-width': 3,
+            'border-width': 4,
+            'width': 175,
+            'height': 62,
+            'transition-duration': '0.3s',
+            'shadow-blur': 25,
+            'shadow-opacity': 0.8,
+            'underlay-padding': 15,
+            'underlay-opacity': 0.5,
+        },
+    },
+    // Person highlighted - Premium pulse effect
+    {
+        selector: 'node[type="person"].highlighted',
+        style: {
+            'width': 115,
+            'height': 115,
+            'border-width': 4,
+            'border-color': '#c7d2fe',
+            'shadow-blur': 30,
+            'shadow-color': '#818cf8',
+            'shadow-opacity': 0.9,
+            'underlay-color': '#818cf8',
+            'underlay-padding': 18,
+            'underlay-opacity': 0.6,
         },
     },
     // Dimmed nodes
@@ -216,11 +313,14 @@ export const cytoscapeStylesheet: Stylesheet[] = [
             'opacity': 0.25,
         },
     },
-    // Hover effect for nodes
+    // Hover effect for nodes - Interactive scaling
     {
         selector: 'node:active',
         style: {
-            'overlay-opacity': 0.1,
+            'overlay-opacity': 0,
+            'border-width': 4,
+            'shadow-blur': 20,
+            'shadow-opacity': 0.7,
         },
     },
     // Base edge styles
@@ -228,12 +328,16 @@ export const cytoscapeStylesheet: Stylesheet[] = [
         selector: 'edge',
         style: {
             'width': 2.5,
-            'line-color': '#94a3b8',
+            'line-color': '#475569',
             'target-arrow-shape': 'none',
             'curve-style': 'bezier',
-            'opacity': 0.6,
-            'transition-property': 'width, opacity',
-            'transition-duration': '0.2s',
+            'opacity': 0.5,
+            'line-style': 'dashed',
+            'line-dash-pattern': [8, 8],
+            'line-dash-offset': 0,
+            'transition-property': 'width, opacity, line-color',
+            'transition-duration': '0.3s',
+            'transition-timing-function': 'ease-out',
         },
     },
     // Edge colors by proficiency
@@ -259,9 +363,10 @@ export const cytoscapeStylesheet: Stylesheet[] = [
     {
         selector: 'edge.highlighted',
         style: {
-            'width': 3.5,
+            'width': 4,
             'opacity': 1,
             'z-index': 999,
+            'line-style': 'solid', // optional: switch to solid, or keep dashed and glow
         },
     },
     // Dimmed edges
