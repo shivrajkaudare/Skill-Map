@@ -2,10 +2,10 @@ import { GraphState, PersonNode, SkillNode, Connection } from './types';
 
 // ─── Seed People ──────────────────────────────────────────────────────────────
 const SEED_PEOPLE: PersonNode[] = [
-    { id: 'p1', name: 'Alice', role: 'Frontend Engineer' },
-    { id: 'p2', name: 'Bob', role: 'Full-Stack Engineer' },
-    { id: 'p3', name: 'Carol', role: 'Backend Engineer' },
-    { id: 'p4', name: 'Dan', role: 'Designer' },
+    { id: 'p1', name: 'Rohit', role: 'Frontend Engineer' },
+    { id: 'p2', name: 'Nikeeta', role: 'Full-Stack Engineer' },
+    { id: 'p3', name: 'Abhishek', role: 'Backend Engineer' },
+    { id: 'p4', name: 'Ruhi', role: 'Designer' },
     { id: 'p5', name: 'Eva', role: 'DevOps Engineer' },
 ];
 
